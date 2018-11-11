@@ -1,1 +1,1 @@
-# carcounter
+Course project for car counting
