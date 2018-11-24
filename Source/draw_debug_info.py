@@ -1,25 +1,21 @@
 import numpy as np
 import cv2
 
-def draw_debug_info( fileName ):
-    cap = cv2.VideoCapture(fileName)
-    ret, frame = cap.read()
-    if ret == False:
-        return
-
-    height, width, channels = frame.shape
-    widthCenter = round(width / 2);
+def draw_debug_info( frame, xrate, metadata ):
     
-    while(cap.isOpened()):
-        ret, frame = cap.read()
-        if ret == True:
-            cv2.line(frame,(widthCenter, 0),(widthCenter, height),(0,0,255),3)
-            cv2.imshow('frame',frame)
-            if cv2.waitKey(1) & 0xFF == ord('q'):
-                break
-        else:
-            break
+    bordered_frame = draw_border_line(frame, xrate)
 
-    # Release everything if job is finished
-    cap.release()
-    cv2.destroyAllWindows()
+    #TODO_issue_4 show fps, bounding rects and counter from metadata  
+
+    return bordered_frame
+
+def draw_border_line(frame, xrate):
+    if (xrate < 0 or xrate > 1):
+        return frame
+    
+    height, width, channels = frame.shape
+    widthCenter = round(width * xrate)
+    cv2.line(frame,(widthCenter, 0),(widthCenter, height),(0,0,255),3)
+
+    #TODO check is it needed
+    return frame
