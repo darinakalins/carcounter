@@ -1,7 +1,7 @@
 import numpy as np
 import cv2
 
-def DrawBorderLine( fileName ):
+def draw_debug_info( fileName ):
     cap = cv2.VideoCapture(fileName)
     ret, frame = cap.read()
     if ret == False:
