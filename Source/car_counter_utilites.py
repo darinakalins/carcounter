@@ -1,18 +1,15 @@
 import cv2
 
-def process_frame(frame, size_constraints, stopline_coords, background_subtractor):
+def extract_objects_rects(frame, size_constraints, background_subtractor):
 
     foreground_mask = background_subtraction(frame.copy(), background_subtractor)
-    new_objects = find_cars_bounding_rects(foreground_mask, size_constraints, 
-                                           stopline_coords)
-    
-    return new_objects
+    return find_cars_bounding_rects(foreground_mask, size_constraints)
 
-def intersection(new_rect, ideal_rect):
-    x = max(new_rect[0], ideal_rect[0])
-    y = max(new_rect[1], ideal_rect[1])
-    w = min(new_rect[0]+new_rect[2], ideal_rect[0]+ideal_rect[2]) - x
-    h = min(new_rect[1]+new_rect[3], ideal_rect[1]+ideal_rect[3]) - y
+def intersection(rect_a, rect_b):
+    x = max(rect_a[0], rect_b[0])
+    y = max(rect_a[1], rect_b[1])
+    w = min(rect_a[0]+rect_a[2], rect_b[0]+rect_b[2]) - x
+    h = min(rect_a[1]+rect_a[3], rect_b[1]+rect_b[3]) - y
 
     if w < 0 or h < 0:
         return None
@@ -25,7 +22,7 @@ def background_subtraction (frame, background_subtractor):
     cv2.imshow('mask', foreground_mask)
     return foreground_mask
 
-def find_cars_bounding_rects(foreground_mask, size_constraints, stopline_coords):
+def find_cars_bounding_rects(foreground_mask, size_constraints):
 
     rects = []
     _, contours, _ = cv2.findContours(foreground_mask.copy(), cv2.RETR_TREE,
@@ -33,8 +30,8 @@ def find_cars_bounding_rects(foreground_mask, size_constraints, stopline_coords)
     for contour in contours:
         rect = cv2.boundingRect(contour)
         if rect[2] > size_constraints[0] and rect[3] > size_constraints[1]:
-            if check_stopline_crossing(rect, stopline_coords):
-                rects.append(rect)
+            #if check_stopline_crossing(rect, stopline_coords):
+            rects.append(rect)
     return rects
 
 def check_stopline_crossing(rect, stopline_coords):

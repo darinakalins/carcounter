@@ -6,9 +6,7 @@ def draw_debug_info( frame, metadata ):
     draw_rects(frame, metadata['rects'])
 
     draw_fps(frame, metadata['fps'])
-    draw_counter(frame, metadata['carcounter'])
-
-    #TODO_issue_4 show fps, bounding rects and counter from metadata  
+    draw_counter(frame, metadata['carcounter']) 
 
     return frame
 

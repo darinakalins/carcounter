@@ -1,9 +1,10 @@
 import cv2
+import time
 import sys
 
 import draw_debug_info as dbg
 import fps_counter as fps
-import car_counter_utilites as car_counter
+import car_tracker as car
 
 def demo_car_counter( fileName ):
 
@@ -17,26 +18,38 @@ def demo_car_counter( fileName ):
     width_center = int(width / 2);
 
     stopline_coords = [width_center, 0, width_center, height]
-    size_constraints = [0.05 * width, 0.05 * height]
+
 
     cars_num = 0
     counter = fps.fps_counter(5)
+    car_tracker = car.car_tracker()
+
+    time_to_sleep = 0.5
     while(cap.isOpened()):
         counter.new_frame()
 
         ret, frame = cap.read()
         if ret == True:
 
+            time.sleep(time_to_sleep)
             # get objects
-            crossed_cars_rects = car_counter.process_frame(frame, size_constraints, 
-                                                           stopline_coords, background_subtractor)
-            cars_num = cars_num + len(crossed_cars_rects)
+            (crossed_cars_rects, new_cars_counter) = car_tracker.process_frame(frame)
+            cars_num = cars_num + new_cars_counter
+
             metadata = dict(xrate=0.5, carcounter=cars_num, fps=counter.show_fps(),
                             rects=crossed_cars_rects)
             debug_frame = dbg.draw_debug_info(frame, metadata)
+
             cv2.imshow('frame',debug_frame)
+
             if cv2.waitKey(1) & 0xFF == ord('q'):
                 break
+
+            if cv2.waitKey(1) & 0xFF == ord('s'):
+                time_to_sleep = time_to_sleep + 0.1
+            if cv2.waitKey(1) & 0xFF == ord('f') and time_to_sleep != 0.0:
+                print('!!!!!\n')
+                time_to_sleep = time_to_sleep - 0.1
         else:
             break
 
