@@ -29,7 +29,7 @@ def demo_car_counter( fileName ):
     counter = fps.fps_counter(5)
     car_tracker = car.car_tracker()
 
-    time_to_sleep = 0.2
+    time_to_sleep = 0.1
     while(cap.isOpened()):
         counter.new_frame()
 
@@ -49,12 +49,6 @@ def demo_car_counter( fileName ):
 
             if cv2.waitKey(1) & 0xFF == ord('q'):
                 break
-
-            if cv2.waitKey(1) & 0xFF == ord('s'):
-                time_to_sleep = time_to_sleep + 0.1
-            if cv2.waitKey(1) & 0xFF == ord('f') and time_to_sleep != 0.0:
-                print('!!!!!\n')
-                time_to_sleep = time_to_sleep - 0.1
         else:
             break
 
