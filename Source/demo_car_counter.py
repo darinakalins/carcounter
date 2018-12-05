@@ -16,6 +16,11 @@ def demo_car_counter( fileName ):
 
     height, width, channels = frame.shape
     width_center = int(width / 2);
+    def bound_predicat(old_rect, new_rect):
+        if (old_rect[0] < width_center and new_rect[0] >= width_center):
+            return True
+        else:
+            return False
 
     stopline_coords = [width_center, 0, width_center, height]
 
@@ -24,7 +29,7 @@ def demo_car_counter( fileName ):
     counter = fps.fps_counter(5)
     car_tracker = car.car_tracker()
 
-    time_to_sleep = 0.5
+    time_to_sleep = 0.2
     while(cap.isOpened()):
         counter.new_frame()
 
@@ -33,8 +38,8 @@ def demo_car_counter( fileName ):
 
             time.sleep(time_to_sleep)
             # get objects
-            (crossed_cars_rects, new_cars_counter) = car_tracker.process_frame(frame)
-            cars_num = cars_num + new_cars_counter
+            (crossed_cars_rects, res_ind) = car_tracker.process_frame(frame, bound_predicat)
+            cars_num = cars_num + len(res_ind)
 
             metadata = dict(xrate=0.5, carcounter=cars_num, fps=counter.show_fps(),
                             rects=crossed_cars_rects)

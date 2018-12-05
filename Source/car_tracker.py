@@ -7,45 +7,85 @@ class car_tracker:
     # constructor
     def __init__(self):
         self.background_subtractor = cv2.createBackgroundSubtractorMOG2(history=256)
-        self.cars = []
+        self.cars = {}
+        self.uid_generator = -1
 
+    # generates new unique id
+    def gen_uid(self):
+        self.uid_generator += 1
+        return self.uid_generator
 
-    # TODO optimize
-    def process_frame(self, frame, pred = None):
+    # get deteckted cars rectangles
+    def get_car_rects(self):
         results = []
-        prev_cars = self.cars.copy()
+        for uid, place in self.cars.items():
+                results.append(place['cur_rect'])
+        return results
 
+    # get cars rectangles from background
+    def get_car_rects_from_bkg(self, frame):
         height, width, channels = frame.shape
         width_center = int(width / 2);
-
-        stopline_coords = [width_center, 0, width_center, height]
         size_constraints = [0.05 * width, 0.05 * height]
 
-        used_indexes = []
-        new_cars_counter = 0
-        objs = utils.extract_objects_rects(frame, size_constraints, self.background_subtractor)
+        return utils.extract_objects_rects(frame, size_constraints, self.background_subtractor)
+
+    def add_new_car(self, car_rect):
+        rect_center = (round(car_rect[0] + car_rect[2]/2), round(car_rect[1] + car_rect[3]/2))
+        self.cars[self.gen_uid()] = {'cur_rect': car_rect,'track' : [rect_center], 'expired' : False}
+
+        print('new car!\n')
+
+
+    def change_existed_car(self, uid, car_rect):
+        cur_track = self.cars[uid]['track'].copy()
+        rect_center = (round(car_rect[0] + car_rect[2]/2), round(car_rect[1] + car_rect[3]/2))
+        cur_track.append(rect_center)
+
+        self.cars[uid] = {'cur_rect': car_rect,'track' : cur_track, 'expired' : False}
+
+    # TODO optimize
+    def process_frame(self, frame, pred):
+        #indexes of cars which are suit for predicat
+        results = []
+
+        # set old cars expired
+        for uid, info in self.cars.items():
+            info['expired'] = True
+
+        objs = self.get_car_rects_from_bkg(frame)
         for obj in objs:
+
+            # maximal intersection square and its car(rect) index
             max_S = 0
-            max_ind = -1
+            max_uid = -1
 
-            for i in range(0, len(prev_cars)):
-                intersection_rect = utils.intersection(obj, prev_cars[i])
-                if intersection_rect != None and max_S < intersection_rect[2] * intersection_rect[3]:
-                    max_S = intersection_rect[2] * intersection_rect[3]
-                    max_ind = i
-
-            if max_ind != -1:
-                self.cars[max_ind] = obj
-                used_indexes.append(max_ind)
+            for uid, place in self.cars.items():
+                intersection_rect = utils.intersection(obj, place['cur_rect'])
+                if intersection_rect:
+                    # intersection is not empty. Check value for maximum
+                    intersection_square = intersection_rect[2] * intersection_rect[3]
+                    if max_S < intersection_square:
+                        max_S = intersection_square
+                        max_uid = uid
+ 
+            if (max_uid != -1):
+                #check for predicat
+                if ( pred and pred(self.cars[max_uid]['cur_rect'], obj)):
+                    results.append(max_uid)
+                self.change_existed_car(max_uid, obj)
 
             else:
-                self.cars.append(obj)
-                new_cars_counter = new_cars_counter + 1
-                print('new car!\n')
+                self.add_new_car(obj)
 
-            for i in range(len(prev_cars) - 1, 0 - 1, -1):
-                if i not in used_indexes:
-                    print('remove ',i,' from list ', range(0, len(prev_cars)))
-                    self.cars.remove(self.cars[i])
+        # collect ids of expired cars
+        ids2remove = []
+        # set old cars expired
+        for uid, info in self.cars.items():
+            if info['expired']:
+                ids2remove.append(uid)
 
-        return (self.cars, new_cars_counter)
+        for uid in ids2remove:
+            self.cars.pop(uid)
+
+        return (self.get_car_rects(), results)
