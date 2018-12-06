@@ -1,6 +1,8 @@
 import cv2
 import numpy as np
+
 import car_counter_utilites as utils
+import move_segment as ms
 
 #class for tracking cars through frames
 class car_tracker:
@@ -10,8 +12,7 @@ class car_tracker:
         self.cars = {}
         self.uid_generator = -1
 
-        self.bck_img_1 = []
-        self.bck_img_2 = []
+        self.move_segmentor = ms.diff_of_accumulateWeighted()
 
     # generates new unique id
     def gen_uid(self):
@@ -27,24 +28,16 @@ class car_tracker:
 
     # get cars rectangles from background
     def get_car_rects_from_bkg(self, frame):
-        height, width, channels = frame.shape
+        foreground_mask = self.move_segmentor.extract_background(frame)
 
-        gray_frame = None
-        if channels > 1:
-            gray_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+        if not (foreground_mask is None):
+            height, width, channels = frame.shape
+
+            width_center = int(width / 2);
+            size_constraints = [0.05 * width, 0.05 * height]
+            return utils.extract_objects_rects(foreground_mask, size_constraints)
         else:
-            gray_frame = frame
-        flt_gray_frame = np.float32(gray_frame)/255.0
-
-        if not np.any(self.bck_img_1) or not np.any(self.bck_img_2):
-            self.bck_img_1 = flt_gray_frame.copy()
-            self.bck_img_2 = flt_gray_frame.copy()
             return []
-
-        width_center = int(width / 2);
-        size_constraints = [0.05 * width, 0.05 * height]
-
-        return utils.extract_objects_rects(flt_gray_frame, size_constraints, self.bck_img_1, self.bck_img_2)
 
     def add_new_car(self, car_rect):
         rect_center = (round(car_rect[0] + car_rect[2]/2), round(car_rect[1] + car_rect[3]/2))
