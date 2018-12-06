@@ -12,7 +12,7 @@ class car_tracker:
         self.cars = {}
         self.uid_generator = -1
 
-        self.move_segmentor = ms.diff_of_accumulateWeighted()
+        self.move_segmentor = ms.default_segmentation()
 
     # generates new unique id
     def gen_uid(self):
@@ -24,6 +24,13 @@ class car_tracker:
         results = []
         for uid, place in self.cars.items():
                 results.append(place['cur_rect'])
+        return results
+
+    # get deteckted cars rectangles
+    def get_car_tracks(self):
+        results = []
+        for uid, place in self.cars.items():
+                results.append(place['track'])
         return results
 
     # get cars rectangles from background
@@ -63,20 +70,23 @@ class car_tracker:
             info['expired'] = True
 
         objs = self.get_car_rects_from_bkg(frame)
+
+        #for every detected car choose suit previous rect
         for obj in objs:
 
-            # maximal intersection square and its car(rect) index
+            # maximal intersection square and its car(rect) uid
             max_S = 0
             max_uid = -1
 
-            for uid, place in self.cars.items():
-                intersection_rect = utils.intersection(obj, place['cur_rect'])
-                if intersection_rect:
-                    # intersection is not empty. Check value for maximum
-                    intersection_square = intersection_rect[2] * intersection_rect[3]
-                    if max_S < intersection_square:
-                        max_S = intersection_square
-                        max_uid = uid
+            for uid, info in self.cars.items():
+                if info['expired']:
+                    intersection_rect = utils.intersection(obj, info['cur_rect'])
+                    if intersection_rect:
+                        # intersection is not empty. Check value for maximum
+                        intersection_square = intersection_rect[2] * intersection_rect[3]
+                        if max_S < intersection_square:
+                            max_S = intersection_square
+                            max_uid = uid
  
             if (max_uid != -1):
                 #check for predicat

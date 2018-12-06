@@ -28,6 +28,7 @@ def demo_car_counter( fileName ):
     cars_num = 0
     counter = fps.fps_counter(5)
     car_tracker = car.car_tracker()
+    debug_info = dbg.debug_info()
 
     time_to_sleep = 0.1
     while(cap.isOpened()):
@@ -38,17 +39,29 @@ def demo_car_counter( fileName ):
 
             time.sleep(time_to_sleep)
             # get objects
-            (crossed_cars_rects, res_ind) = car_tracker.process_frame(frame, bound_predicat)
+            (cars_rects, res_ind) = car_tracker.process_frame(frame, bound_predicat)
             cars_num = cars_num + len(res_ind)
 
-            metadata = dict(xrate=0.5, carcounter=cars_num, fps=counter.show_fps(),
-                            rects=crossed_cars_rects)
-            debug_frame = dbg.draw_debug_info(frame, metadata)
+            debug_info.set_xrate(0.5)
+            debug_info.set_counter(cars_num)
+            debug_info.set_rects(cars_rects)
+            debug_info.set_fps(counter.show_fps())
+            debug_info.set_tracks(car_tracker.get_car_tracks())
+
+            debug_frame = debug_info.draw(frame)
 
             cv2.imshow('frame',debug_frame)
 
             if cv2.waitKey(1) & 0xFF == ord('q'):
                 break
+
+            if cv2.waitKey(1) & 0xFF == ord('s'):
+                time_to_sleep /= 2.0
+                print('pause is reduced to ',time_to_sleep)
+
+            if cv2.waitKey(33) & 0xFF == ord('w'):
+                time_to_sleep *= 2.0
+                print('pause is grown up to ',time_to_sleep)
         else:
             break
 
