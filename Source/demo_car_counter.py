@@ -6,6 +6,19 @@ import draw_debug_info as dbg
 import fps_counter as fps
 import car_tracker as car
 
+import datetime
+
+def log_crossing_line(start_time):
+
+    time_diff = datetime.datetime.now() - start_time
+    file_name = "logged_times_" + start_time.strftime("%I_%M_%S") + ".txt"
+    print(time_diff)
+
+    with open(file_name,"a") as file:
+        file.write(str(time_diff.seconds*1E3 + time_diff.microseconds/1E3) + "\n\n")
+
+
+
 def demo_car_counter(file_name):
 
     cap = cv2.VideoCapture(file_name)
@@ -32,6 +45,7 @@ def demo_car_counter(file_name):
     debug_info = dbg.debug_info()
 
     time_to_sleep = 0.01
+    start_time = datetime.datetime.now()
     while(cap.isOpened()):
         counter.new_frame()
 
@@ -42,6 +56,9 @@ def demo_car_counter(file_name):
             # get objects
             cars_rects, colors, res_ind = car_tracker.process_frame(frame, bound_predicat)
             cars_num = cars_num + len(res_ind)
+            if len(res_ind) != 0:
+                log_crossing_line(start_time)
+
             debug_info.set_xrate(0.5)
             debug_info.set_counter(cars_num)
             debug_info.set_rects(cars_rects)
