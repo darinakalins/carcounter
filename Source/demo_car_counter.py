@@ -6,16 +6,17 @@ import draw_debug_info as dbg
 import fps_counter as fps
 import car_tracker as car
 
-def demo_car_counter( fileName ):
+def demo_car_counter(file_name):
 
-    cap = cv2.VideoCapture(fileName)
+    cap = cv2.VideoCapture(file_name)
     background_subtractor = cv2.createBackgroundSubtractorMOG2(history=256)
     ret, frame = cap.read()
     if ret == False:
         return
 
     height, width, channels = frame.shape
-    width_center = int(width / 2);
+    width_center = int(width / 2)
+
     def bound_predicat(old_rect, new_rect):
         if (old_rect[0] < width_center and new_rect[0] >= width_center):
             return True
@@ -30,7 +31,7 @@ def demo_car_counter( fileName ):
     car_tracker = car.car_tracker()
     debug_info = dbg.debug_info()
 
-    time_to_sleep = 0.1
+    time_to_sleep = 0.01
     while(cap.isOpened()):
         counter.new_frame()
 
@@ -39,12 +40,12 @@ def demo_car_counter( fileName ):
 
             time.sleep(time_to_sleep)
             # get objects
-            (cars_rects, res_ind) = car_tracker.process_frame(frame, bound_predicat)
+            cars_rects, colors, res_ind = car_tracker.process_frame(frame, bound_predicat)
             cars_num = cars_num + len(res_ind)
-
             debug_info.set_xrate(0.5)
             debug_info.set_counter(cars_num)
             debug_info.set_rects(cars_rects)
+            debug_info.set_colors(colors)
             debug_info.set_fps(counter.show_fps())
             debug_info.set_tracks(car_tracker.get_car_tracks())
 
@@ -54,14 +55,6 @@ def demo_car_counter( fileName ):
 
             if cv2.waitKey(1) & 0xFF == ord('q'):
                 break
-
-            if cv2.waitKey(1) & 0xFF == ord('s'):
-                time_to_sleep /= 2.0
-                print('pause is reduced to ',time_to_sleep)
-
-            if cv2.waitKey(33) & 0xFF == ord('w'):
-                time_to_sleep *= 2.0
-                print('pause is grown up to ',time_to_sleep)
         else:
             break
 
@@ -71,3 +64,4 @@ def demo_car_counter( fileName ):
 
 if __name__ == '__main__':
     demo_car_counter(sys.argv[1])
+

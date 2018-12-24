@@ -1,10 +1,12 @@
 import cv2
 
+
 class debug_info:
 
     def __init(self):
         self.xrate = 0.5
         self.rects = []
+        self.colors = []
         self.fps = 0
         self.counter = 0
         self.tracks = []
@@ -13,7 +15,10 @@ class debug_info:
         self.xrate = xrate
 
     def set_rects(self, rects):
-        self.rects = rects.copy()   
+        self.rects = rects.copy()
+
+    def set_colors(self, colors):
+        self.colors = colors.copy()
         
     def set_fps(self, fps):
         self.fps = fps
@@ -24,15 +29,15 @@ class debug_info:
     def set_tracks(self, tracks):
         self.tracks = tracks.copy()   
 
-    def draw(self, frame ):
+    def draw(self, frame):
 
         self.draw_border_line(frame, self.xrate)
-        self.draw_rects(frame, self.rects)
+        self.draw_rects(frame, self.rects, self.colors)
 
         self.draw_fps(frame, self.fps)
         self.draw_counter(frame, self.counter)
 
-        self.draw_tracks(frame, self.tracks) 
+        self.draw_tracks(frame, self.tracks, self.colors)
 
         return frame
 
@@ -42,18 +47,22 @@ class debug_info:
 
         height, width, channels = frame.shape
         widthCenter = round(width * xrate)
-        cv2.line(frame,(widthCenter, 0),(widthCenter, height),(0,0,255),3)
+        cv2.line(frame,(widthCenter, 0),(widthCenter, height),(0,0,255),2)
 
         #TODO check is it needed
         return frame
 
 
-    def draw_rects(self, frame, rects):
+    def draw_rects(self, frame, rects, colors):
 
         height, width, channels = frame.shape
-        for rect in rects:
+        for i, rect in enumerate(rects):
             x, y, w, h = rect
-            cv2.rectangle(frame, (x, y), (x+w, y+h), (0,255,0), 2)
+            overlay = frame.copy()
+
+            cv2.rectangle(overlay, (x, y), (x+w, y+h), colors[i],  cv2.FILLED)
+            opacity = 0.3
+            cv2.addWeighted(overlay, opacity, frame, 1 - opacity, 0, frame)
 
         return frame
 
@@ -63,7 +72,6 @@ class debug_info:
         font = cv2.FONT_HERSHEY_SIMPLEX
         cv2.putText(frame,'fps: ' + str(fps),(width - 150,25), font, 0.6,(0,255,0),1,cv2.LINE_AA)
 
-        #TODO check is it needed
         return frame
 
     def draw_counter(self, frame, counter):
@@ -72,10 +80,9 @@ class debug_info:
         font = cv2.FONT_HERSHEY_SIMPLEX
         cv2.putText(frame,'counter: ' + str(counter),(width - 150,50), font, 0.6,(0,255,0),1,cv2.LINE_AA)
 
-        #TODO check is it needed
         return frame
 
-    def draw_tracks(self, frame, tracks):
-        for track in tracks:
+    def draw_tracks(self, frame, tracks, colors):
+        for j, track in enumerate(tracks):
             for i in range(0, len(track)-1):
-                cv2.line(frame,track[i],track[i+1],(0,0,255),3)
+                cv2.line(frame,track[i],track[i+1],colors[j],2)

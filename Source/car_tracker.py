@@ -1,5 +1,5 @@
 import cv2
-import numpy as np
+import random
 
 import car_counter_utilites as utils
 import move_segment as ms
@@ -26,6 +26,12 @@ class car_tracker:
                 results.append(place['cur_rect'])
         return results
 
+    def get_colors(self):
+        results = []
+        for uid, place in self.cars.items():
+            results.append(place['color'])
+        return results
+
     # get deteckted cars rectangles
     def get_car_tracks(self):
         results = []
@@ -40,27 +46,25 @@ class car_tracker:
         if not (foreground_mask is None):
             height, width, channels = frame.shape
 
-            width_center = int(width / 2);
+            width_center = int(width / 2)
             size_constraints = [0.05 * width, 0.05 * height]
             return utils.extract_objects_rects(foreground_mask, size_constraints)
         else:
             return []
 
-    def add_new_car(self, car_rect):
+    def add_new_car(self, car_rect, color):
         rect_center = (round(car_rect[0] + car_rect[2]/2), round(car_rect[1] + car_rect[3]/2))
-        self.cars[self.gen_uid()] = {'cur_rect': car_rect,'track' : [rect_center], 'expired' : False}
-
-        print('new car!\n')
+        self.cars[self.gen_uid()] = {'cur_rect': car_rect, 'color' : color, 'track' : [rect_center], 'expired' : False}
 
 
     def change_existed_car(self, uid, car_rect):
         cur_track = self.cars[uid]['track'].copy()
+        cur_color = self.cars[uid]['color']
         rect_center = (round(car_rect[0] + car_rect[2]/2), round(car_rect[1] + car_rect[3]/2))
         cur_track.append(rect_center)
 
-        self.cars[uid] = {'cur_rect': car_rect,'track' : cur_track, 'expired' : False}
+        self.cars[uid] = {'cur_rect': car_rect, 'color' : cur_color, 'track' : cur_track, 'expired' : False}
 
-    # TODO optimize
     def process_frame(self, frame, pred):
         #indexes of cars which are suit for predicat
         results = []
@@ -90,12 +94,13 @@ class car_tracker:
  
             if (max_uid != -1):
                 #check for predicat
-                if ( pred and pred(self.cars[max_uid]['cur_rect'], obj)):
+                if pred and pred(self.cars[max_uid]['cur_rect'], obj):
                     results.append(max_uid)
                 self.change_existed_car(max_uid, obj)
 
             else:
-                self.add_new_car(obj)
+                color = (random.randint(0, 255), random.randint(0, 255), random.randint(0, 255), -1)
+                self.add_new_car(obj, color)
 
         # collect ids of expired cars
         ids2remove = []
@@ -107,4 +112,4 @@ class car_tracker:
         for uid in ids2remove:
             self.cars.pop(uid)
 
-        return (self.get_car_rects(), results)
+        return self.get_car_rects(), self.get_colors(), results

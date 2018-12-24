@@ -1,9 +1,9 @@
 import cv2
-import numpy as np
+
 
 def extract_objects_rects(mask, size_constraints):
-
     return find_cars_bounding_rects(mask, size_constraints)
+
 
 def intersection(rect_a, rect_b):
     x = max(rect_a[0], rect_b[0])
@@ -15,6 +15,7 @@ def intersection(rect_a, rect_b):
         return None
 
     return (x, y, w, h)
+
 
 def find_cars_bounding_rects(foreground_mask, size_constraints):
 
