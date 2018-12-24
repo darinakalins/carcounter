@@ -9,7 +9,7 @@ class fps_counter:
         self.times = [0 for i in range(0, self.frames_ramaining)]
         self.pointer = -1
 
-    # /brief signals that new frame isprocessedgir 
+    # /brief signals that new frame isprocessedgir
     def new_frame(self):
         self.pointer = (self.pointer + 1) % len(self.times)
         self.times[self.pointer] = datetime.datetime.now()

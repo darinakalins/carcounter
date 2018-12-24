@@ -38,7 +38,7 @@ def demo_car_counter(file_name):
         ret, frame = cap.read()
         if ret == True:
 
-            time.sleep(time_to_sleep)
+            #time.sleep(time_to_sleep)
             # get objects
             cars_rects, colors, res_ind = car_tracker.process_frame(frame, bound_predicat)
             cars_num = cars_num + len(res_ind)
@@ -64,4 +64,3 @@ def demo_car_counter(file_name):
 
 if __name__ == '__main__':
     demo_car_counter(sys.argv[1])
-
