@@ -85,11 +85,11 @@ class car_tracker:
         x, y, w, h = zip(*rects_for_interpolate)
         fp, residuals, rank, sv, rcond = sp.polyfit(x, y, 3, full=True)
         f = sp.poly1d(fp)
-        fx = sp.linspace(x[0], x[-1]+30, 20).astype(int)
+        fx = sp.linspace(x[0], x[-1]+30, 100).astype(int)
         y_interp = f(fx).astype(int)
         fp, residuals, rank, sv, rcond = sp.polyfit(w, h, 3, full=True)
         f = sp.poly1d(fp)
-        fw = sp.linspace(w[0], w[-1]+30, 20).astype(int)
+        fw = sp.linspace(w[0], w[-1]+30, 100).astype(int)
         h_interp = f(fw).astype(int)
         rects = list(zip(fx, y_interp, fw, h_interp))
         self.cars[uid]['rects'] = rects
